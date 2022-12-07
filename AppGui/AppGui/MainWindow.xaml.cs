@@ -206,7 +206,6 @@ namespace AppGui
             // MmiCommunication(string IMhost, int portIM, string UserOD, string thisModalityName)
             mmic = new MmiCommunication("localhost", 8000, "User1", "GUI");
 
-            sendMessage(LOADING);
 
             FirefoxOptions options = new FirefoxOptions();
             options.BrowserExecutableLocation = ("C:\\Program Files\\Mozilla Firefox\\firefox.exe"); //location where Firefox is installed
@@ -223,7 +222,9 @@ namespace AppGui
 
             driver.Manage().Window.Maximize();
 
-            sendMessage(LETS_PLAY);
+            opponentType("COMPUTER", -1);
+            playAgainst(-1);
+
             //play();
 
         }
@@ -236,13 +237,13 @@ namespace AppGui
             Console.WriteLine("JSON:");
             Console.WriteLine(json);
             var temp = json.recognized;
-            Dictionary<string, string> recognized = JsonConvert.DeserializeObject<Dictionary<string, string>>(temp.ToString());
+            List<string> recognized = JsonConvert.DeserializeObject<List<string>>(temp.ToString());
             Console.WriteLine("Recognized: ");
 
 
-            foreach (KeyValuePair<string, string> kvp in recognized)
+            foreach (string kvp in recognized)
             {
-                Console.WriteLine("Key = {0}, Value = {1}", kvp.Key, kvp.Value);
+                Console.WriteLine("Key = {0}", kvp);
             }
 
             performAction(recognized);
@@ -250,16 +251,18 @@ namespace AppGui
 
         }
 
-        public void performAction(Dictionary<string, string> dict, bool ignoreConfidence = false)
+        public void performAction(List<string> list, bool ignoreConfidence = false)
         {
-            float confidence = float.Parse(dict["Confidence"], CultureInfo.InvariantCulture);
+            float confidence = float.Parse(list[2], CultureInfo.InvariantCulture);
 
             Console.WriteLine("Confidence: " + confidence);
 
-            string entity = getFromRecognized(dict, "Entity");
-            string action = getFromRecognized(dict, "Action", "");
+            //string entity = getFromRecognized(dict, "Entity");
+            //string action = getFromRecognized(dict, "Action", "");
+            string entity = "PAWN";
+            string action = list[1];
 
-            action = getCurrentOrUpdate(action, "action", "");
+            //action = getCurrentOrUpdate(action, "action", "");
 
             bool isConfident = true;
 
@@ -271,33 +274,19 @@ namespace AppGui
                     startGame();
                     break;
 
-                case "END":
+                case "teste":
                     if (driver.Url != COMPUTER_URL && !driver.Url.Contains(VS_FRIENDS_URL))
                     {
-                        sendMessage(WRONG_PAGE_ERROR);
-                        return;
-                    }
-                    Console.WriteLine("GIVE UP");
-                    if (!ignoreConfidence)
-                    {
-                        isConfident = generateConfidence(confidence, dict, forceConfidence: true);
-                    }
-                    if (isConfident)
-                    {
-                        giveUp();
-                    }
-                    break;
-
-                case "MOVE":
-                    if (driver.Url != COMPUTER_URL && !driver.Url.Contains(VS_FRIENDS_URL))
-                    {
-                        sendMessage(WRONG_PAGE_ERROR);
                         return;
                     }
                     Console.WriteLine("MOVE");
-                    string from = getFromRecognized(dict, "PositionInitial");
-                    string to = getFromRecognized(dict, "PositionFinal");
-                    int pieceNumber = dict.ContainsKey("NumberInitial") ? int.Parse(dict["NumberInitial"]) : 1;
+                    //string from = getFromRecognized(dict, "PositionInitial");
+                    //string to = getFromRecognized(dict, "PositionFinal");
+                    //int pieceNumber = dict.ContainsKey("NumberInitial") ? int.Parse(dict["NumberInitial"]) : 1;
+
+                    string from = "LEFT";
+                    string to = "FRONT";
+                    int pieceNumber = 1;
 
                     var possiblePieces = getPossiblePieces(
                         pieceName: entity,
@@ -305,8 +294,9 @@ namespace AppGui
                         number: pieceNumber
                     );
 
-                    int finalNumer = dict.ContainsKey("NumberFinal") ? int.Parse(dict["NumberFinal"]) : 1;
-                    if (!ignoreConfidence) isConfident = generateConfidence(confidence, dict);
+                    //int finalNumer = dict.ContainsKey("NumberFinal") ? int.Parse(dict["NumberFinal"]) : 1;
+                    int finalNumer = 1;
+                    //if (!ignoreConfidence) isConfident = generateConfidence(confidence, dict);
                     if (isConfident)
                     {
                         movePieces(
@@ -316,110 +306,6 @@ namespace AppGui
                         );
                     }
 
-                    break;
-
-                case "PLAY AGAINST":
-                    Console.WriteLine("PLAY AGAINST");
-
-                    int friendNumber = dict.ContainsKey("Number") ? int.Parse(dict["Number"]) : -1;
-                    if (!ignoreConfidence) isConfident = generateConfidence(confidence, dict);
-                    if (isConfident)
-                    {
-                        opponentType(entity, friendNumber);
-                        playAgainst(friendNumber);
-                    }
-
-                    break;
-
-                case "SPECIAL":
-                    if (driver.Url != COMPUTER_URL && !driver.Url.Contains(VS_FRIENDS_URL))
-                    {
-                        sendMessage(WRONG_PAGE_ERROR);
-                        return;
-                    }
-                    String specialMove = getFromRecognized(dict, "SpecialMove");
-                    if (specialMove == "ROQUE")
-                    {
-                        perfomRoque();
-                    }
-                    break;
-
-                case "ANSWER":
-                    if (!context.ContainsKey(WAITING_CONFIRM) || !bool.Parse(context[WAITING_CONFIRM])) return;
-                    bool answer = entity == "YES";
-                    if (answer) performAction(context, true);
-                    else
-                    {
-                        sendMessage(REPEAT_PHRASE);
-                        context.Clear();
-                    }
-                    break;
-                case "CAPTURE":
-                    if (driver.Url != COMPUTER_URL && !driver.Url.Contains(VS_FRIENDS_URL))
-                    {
-                        sendMessage(WRONG_PAGE_ERROR);
-                        return;
-                    }
-                    Console.WriteLine("CAPTURING");
-                    string initialPos = getFromRecognized(dict, "PositionInitial");
-                    string finalPos = getFromRecognized(dict, "PositionFinal");
-                    pieceNumber = dict.ContainsKey("NumberInitial") ? int.Parse(dict["NumberInitial"]) : 1;
-
-                    possiblePieces = getPossiblePiecesCapture(
-                        pieceName: entity,
-                        from: initialPos,
-                        number: pieceNumber
-                    );
-
-                    finalNumer = dict.ContainsKey("NumberFinal") ? int.Parse(dict["NumberFinal"]) : 1;
-                    string target = getFromRecognized(dict, "Target");
-                    if (!ignoreConfidence) isConfident = generateConfidence(confidence, dict);
-                    if (isConfident)
-                    {
-                        capture(
-                            pieces: possiblePieces,
-                            to: finalPos,
-                            number: finalNumer,
-                            targetName: target
-                        );
-                    }
-
-                    break;
-
-                case "GO BACK":
-                    Console.WriteLine("GO BACK");
-                    if (!ignoreConfidence)
-                    {
-                        isConfident = generateConfidence(confidence, dict, forceConfidence: true);
-                    }
-                    if (isConfident)
-                    {
-                        driver.Navigate().Back();
-                    }
-                    break;
-
-                case "SOUND_MANIPULATION_OFF":
-                    if (driver.Url != COMPUTER_URL && !driver.Url.Contains(VS_FRIENDS_URL))
-                    {
-                        sendMessage(WRONG_PAGE_ERROR);
-                        return;
-                    }
-                    if (!ignoreConfidence) isConfident = generateConfidence(confidence, dict);
-                    if (isConfident) soundOff();
-                    break;
-
-                case "SOUND_MANIPULATION_ON":
-                    if (driver.Url != COMPUTER_URL && !driver.Url.Contains(VS_FRIENDS_URL))
-                    {
-                        sendMessage(WRONG_PAGE_ERROR);
-                        return;
-                    }
-                    if (!ignoreConfidence) isConfident = generateConfidence(confidence, dict);
-                    if (isConfident) soundOn();
-                    break;
-
-                default:
-                    sendMessage(NO_KNOWN_ACTION_ERROR);
                     break;
             }
         }
