@@ -45,15 +45,15 @@ namespace AppGui
         static string GIVE_UP_BUTTON = "/html/body/div[4]/div/div[2]/div[2]/div[2]/a";
 
 
-        static string CLOSE_AD = "/html/body/div[25]/div[2]/div/div/button";
+        static string CLOSE_AD = "/html/body/div[26]/div[2]/div/div/button";
         static string CLOSE_AD2 = "/html/body/div[27]/div[2]/div/div/button";
-
+       
 
         static string COORDS = "/html/body/div[2]/div[2]/chess-board/svg[1]";
         static string MOVE_TABLE = "/html/body/div[3]/div/vertical-move-list";
         static string FRIENDS_LIST = "/html/body/div[1]/div[2]/main/div[1]/div[2]/div[2]/div/div[3]";
 
-        static string COMPUTER_START_BUTTON = "/html/body/div[4]/div/div[2]/button";
+        static string COMPUTER_START_BUTTON = "/html/body/div[3]/div/div[2]/button";
         static string FRIEND_START_BUTTON = "/html/body/div[4]/div/div[2]/div/div[2]/div[1]/button";
         static string FRIEND_AGREE_BUTTON = "/html/body/div[15]/div[2]/div/div/div/div[8]/button";
 
@@ -184,6 +184,8 @@ namespace AppGui
         private string pieceColor;
         private bool isCurrent;
         private IWebElement table;
+        private long previousTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        private long COOLDOWN_TIME = 10000;
 
         // ------------------------ DICTS
         public Dictionary<string, string> context = new Dictionary<string, string>();
@@ -211,19 +213,20 @@ namespace AppGui
             options.BrowserExecutableLocation = ("C:\\Program Files\\Mozilla Firefox\\firefox.exe"); //location where Firefox is installed
             driver = new FirefoxDriver(options);
 
-            redirect(LOGIN_URL);
+            //redirect(LOGIN_URL);
 
-            IWebElement username_field = driver.FindElement(By.Id(USERNAME_FIELD));
-            username_field.SendKeys(USERNAME);
-            IWebElement password_field = driver.FindElement(By.Id(PASSWORD_FIELD));
-            password_field.SendKeys(PASSWORD);
-            IWebElement login_button = driver.FindElement(By.Id(LOGIN_BUTTON));
-            login_button.Click();
+            //IWebElement username_field = driver.FindElement(By.Id(USERNAME_FIELD));
+            //username_field.SendKeys(USERNAME);
+            //IWebElement password_field = driver.FindElement(By.Id(PASSWORD_FIELD));
+            //password_field.SendKeys(PASSWORD);
+            //IWebElement login_button = driver.FindElement(By.Id(LOGIN_BUTTON));
+            //login_button.Click();
 
             driver.Manage().Window.Maximize();
 
             opponentType("COMPUTER", -1);
             playAgainst(-1);
+
 
             //play();
 
@@ -253,6 +256,14 @@ namespace AppGui
 
         public void performAction(List<string> list, bool ignoreConfidence = false)
         {
+            if (isOnCooldown()) {
+                Console.WriteLine("On cooldown");
+                return;
+            }
+
+            previousTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            
+
             float confidence = float.Parse(list[2], CultureInfo.InvariantCulture);
 
             Console.WriteLine("Confidence: " + confidence);
@@ -268,8 +279,8 @@ namespace AppGui
 
             switch (action)
             {
-                case "START":
-                    Console.WriteLine("START");
+                case "Init":
+                    Console.WriteLine("Init");
                     if (driver.Url != COMPUTER_URL && !driver.Url.Contains(VS_FRIENDS_URL)) return;
                     startGame();
                     break;
@@ -1203,6 +1214,11 @@ namespace AppGui
 
         // -------------------------------- EXTRAS
 
+        public bool isOnCooldown() {
+            Console.WriteLine("DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(): " + DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
+            return DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - previousTime < COOLDOWN_TIME;
+        }
+        
         public dynamic getFromRecognized(Dictionary<string, string> recognized, string key, string defaultValue = null)
         {
             return recognized.ContainsKey(key) ? recognized[key] : defaultValue;
