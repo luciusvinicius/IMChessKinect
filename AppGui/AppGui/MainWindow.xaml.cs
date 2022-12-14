@@ -176,13 +176,6 @@ namespace AppGui
             ["COMPUTER"] = "computador",
         };
 
-        Dictionary<string, string> directionsDict = new Dictionary<string, string>() {
-            ["R"] = "RIGHT",
-            ["L"] = "LEFT",
-            ["A"] = "FRONT",
-            ["B"] = "BACK",
-        };
-
         // ------------------------ VARS
 
         private WebDriver driver;
@@ -198,6 +191,21 @@ namespace AppGui
         public Dictionary<string, string> context = new Dictionary<string, string>();
         public Dictionary<string, string> pieceDict = new Dictionary<string, string>() {
             {"p", "PAWN"}, {"k", "KING"}, {"q", "QUEEN"}, {"r", "ROOK"}, {"b", "BISHOP"}, {"n", "KNIGHT"}
+        };
+
+        Dictionary<string, string> directionsDict = new Dictionary<string, string>()
+        {
+            ["R"] = "RIGHT",
+            ["L"] = "LEFT",
+            ["A"] = "FRONT",
+            ["B"] = "BACK",
+        };
+
+        Dictionary<string, string> pieceDict2 = new Dictionary<string, string>()
+        {
+            ["bishop"] = "BISHOP",
+            ["Knight"] = "KNIGHT",
+            ["Pawn"] = "PAWN",
         };
 
         static string WAITING_CONFIRM = "WAITING_CONFIRM";
@@ -277,14 +285,16 @@ namespace AppGui
 
             //string entity = getFromRecognized(dict, "Entity");
             //string action = getFromRecognized(dict, "Action", "");
-            string entity = "KNIGHT";
+            string entity = getCurrentOrUpdate(null, "entity", "");
             string action = list[1];
+            Console.WriteLine("Curent Entity: " + entity);
 
             //action = getCurrentOrUpdate(action, "action", "");
 
             bool isConfident = true;
 
             bool isMove = action.Contains("Move");
+            bool isEntity = pieceDict2.ContainsKey(action);
 
             switch (action)
             {
@@ -295,9 +305,14 @@ namespace AppGui
                     break;                    
                     
                 default:
-                    if (isMove) {
+                    if (isMove)
+                    {
                         if (driver.Url != COMPUTER_URL && !driver.Url.Contains(VS_FRIENDS_URL))
                         {
+                            return;
+                        }
+                        if (entity == "") {
+                            Console.WriteLine("No entity");
                             return;
                         }
                         Console.WriteLine("MOVE");
@@ -310,6 +325,10 @@ namespace AppGui
                         Console.WriteLine("To: " + to);
                         int pieceNumber = 1;
 
+                        if (entity == "PAWN") {
+                            pieceNumber = 2;
+                        }
+                        
                         var possiblePieces = getPossiblePieces(
                             pieceName: entity,
                             from: from,
@@ -327,6 +346,12 @@ namespace AppGui
                                 number: finalNumer
                             );
                         }
+                    }
+
+                    else if (isEntity) {
+                        entity = pieceDict2[action];
+                        Console.WriteLine("NEW ENTITY: " + entity);
+                        getCurrentOrUpdate(entity, "entity", "");
                     }
 
                     break;
