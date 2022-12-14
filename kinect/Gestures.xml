@@ -2,7 +2,52 @@
 <Gestures>
   <Gesture>
     <ID>0</ID>
-    <NAME>teste</NAME>
-    <SEMANTIC>teste</SEMANTIC>
+    <NAME>bishop</NAME>
+    <SEMANTIC>bishop</SEMANTIC>
+  </Gesture>
+  <Gesture>
+    <ID>1</ID>
+    <NAME>Capture</NAME>
+    <SEMANTIC>Capture</SEMANTIC>
+  </Gesture>
+  <Gesture>
+    <ID>2</ID>
+    <NAME>Init</NAME>
+    <SEMANTIC>Init</SEMANTIC>
+  </Gesture>
+  <Gesture>
+    <ID>3</ID>
+    <NAME>Knight</NAME>
+    <SEMANTIC>Knight</SEMANTIC>
+  </Gesture>
+  <Gesture>
+    <ID>4</ID>
+    <NAME>MoveAhead</NAME>
+    <SEMANTIC>MoveA</SEMANTIC>
+  </Gesture>
+  <Gesture>
+    <ID>5</ID>
+    <NAME>MoveBack</NAME>
+    <SEMANTIC>MoveB</SEMANTIC>
+  </Gesture>
+  <Gesture>
+    <ID>6</ID>
+    <NAME>MoveLeft</NAME>
+    <SEMANTIC>MoveL</SEMANTIC>
+  </Gesture>
+  <Gesture>
+    <ID>7</ID>
+    <NAME>MoveRight</NAME>
+    <SEMANTIC>MoveR</SEMANTIC>
+  </Gesture>
+  <Gesture>
+    <ID>8</ID>
+    <NAME>Pawn</NAME>
+    <SEMANTIC>Pawn</SEMANTIC>
+  </Gesture>
+  <Gesture>
+    <ID>9</ID>
+    <NAME>Quit</NAME>
+    <SEMANTIC>Quit</SEMANTIC>
   </Gesture>
 </Gestures>

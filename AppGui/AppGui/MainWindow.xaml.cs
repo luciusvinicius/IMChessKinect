@@ -176,6 +176,13 @@ namespace AppGui
             ["COMPUTER"] = "computador",
         };
 
+        Dictionary<string, string> directionsDict = new Dictionary<string, string>() {
+            ["R"] = "RIGHT",
+            ["L"] = "LEFT",
+            ["A"] = "FRONT",
+            ["B"] = "BACK",
+        };
+
         // ------------------------ VARS
 
         private WebDriver driver;
@@ -270,12 +277,14 @@ namespace AppGui
 
             //string entity = getFromRecognized(dict, "Entity");
             //string action = getFromRecognized(dict, "Action", "");
-            string entity = "PAWN";
+            string entity = "KNIGHT";
             string action = list[1];
 
             //action = getCurrentOrUpdate(action, "action", "");
 
             bool isConfident = true;
+
+            bool isMove = action.Contains("Move");
 
             switch (action)
             {
@@ -283,38 +292,41 @@ namespace AppGui
                     Console.WriteLine("Init");
                     if (driver.Url != COMPUTER_URL && !driver.Url.Contains(VS_FRIENDS_URL)) return;
                     startGame();
-                    break;
+                    break;                    
+                    
+                default:
+                    if (isMove) {
+                        if (driver.Url != COMPUTER_URL && !driver.Url.Contains(VS_FRIENDS_URL))
+                        {
+                            return;
+                        }
+                        Console.WriteLine("MOVE");
+                        //string from = getFromRecognized(dict, "PositionInitial");
+                        //string to = getFromRecognized(dict, "PositionFinal");
+                        //int pieceNumber = dict.ContainsKey("NumberInitial") ? int.Parse(dict["NumberInitial"]) : 1;
 
-                case "teste":
-                    if (driver.Url != COMPUTER_URL && !driver.Url.Contains(VS_FRIENDS_URL))
-                    {
-                        return;
-                    }
-                    Console.WriteLine("MOVE");
-                    //string from = getFromRecognized(dict, "PositionInitial");
-                    //string to = getFromRecognized(dict, "PositionFinal");
-                    //int pieceNumber = dict.ContainsKey("NumberInitial") ? int.Parse(dict["NumberInitial"]) : 1;
+                        string from = "LEFT";
+                        string to = directionsDict[action[action.Length - 1].ToString()];
+                        Console.WriteLine("To: " + to);
+                        int pieceNumber = 1;
 
-                    string from = "LEFT";
-                    string to = "FRONT";
-                    int pieceNumber = 1;
-
-                    var possiblePieces = getPossiblePieces(
-                        pieceName: entity,
-                        from: from,
-                        number: pieceNumber
-                    );
-
-                    //int finalNumer = dict.ContainsKey("NumberFinal") ? int.Parse(dict["NumberFinal"]) : 1;
-                    int finalNumer = 1;
-                    //if (!ignoreConfidence) isConfident = generateConfidence(confidence, dict);
-                    if (isConfident)
-                    {
-                        movePieces(
-                            pieces: possiblePieces,
-                            to: to,
-                            number: finalNumer
+                        var possiblePieces = getPossiblePieces(
+                            pieceName: entity,
+                            from: from,
+                            number: pieceNumber
                         );
+
+                        //int finalNumer = dict.ContainsKey("NumberFinal") ? int.Parse(dict["NumberFinal"]) : 1;
+                        int finalNumer = 1;
+                        //if (!ignoreConfidence) isConfident = generateConfidence(confidence, dict);
+                        if (isConfident)
+                        {
+                            movePieces(
+                                pieces: possiblePieces,
+                                to: to,
+                                number: finalNumer
+                            );
+                        }
                     }
 
                     break;
