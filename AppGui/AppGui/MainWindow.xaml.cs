@@ -42,7 +42,7 @@ namespace AppGui
         static string BOARD = "//*[@id=\"board-vs-personalities\"]";
         static string BOARD_FRIEND = "//*[@id=\"board-single\"]";
         static string BOARD_FRIEND2 = "//*[@id=\"board\"]";
-        static string GIVE_UP_BUTTON = "/html/body/div[4]/div/div[2]/div[2]/div[2]/a";
+        static string GIVE_UP_BUTTON = "/html/body/div[3]/div/div[2]/div[2]/div[2]/a";
 
 
         static string CLOSE_AD = "/html/body/div[26]/div[2]/div/div/button";
@@ -302,7 +302,44 @@ namespace AppGui
                     Console.WriteLine("Init");
                     if (driver.Url != COMPUTER_URL && !driver.Url.Contains(VS_FRIENDS_URL)) return;
                     startGame();
-                    break;                    
+                    break;
+
+                case "Quit":
+                    giveUp();
+                    break;
+                    
+                case "Capture":
+                    if (driver.Url != COMPUTER_URL && !driver.Url.Contains(VS_FRIENDS_URL))
+                    {
+                        return;
+                    }
+                    Console.WriteLine("CAPTURING");
+                    if (entity == "")
+                    {
+                        Console.WriteLine("No entity");
+                        return;
+                    }
+                    string initialPos = getCurrentOrUpdate(null, "from", "LEFT");
+                    //string finalPos = getFromRecognized(dict, "PositionFinal");
+                    int pieceNumber = 1;
+
+                    var possiblePieces = getPossiblePiecesCapture(
+                        pieceName: entity,
+                        from: initialPos,
+                        number: pieceNumber
+                    );
+
+                    var finalNumer = 1;
+                    //string target = getFromRecognized(dict, "Target");
+                    if (isConfident)
+                    {
+                        capture(
+                            pieces: possiblePieces,
+                            number: finalNumer
+                        );
+                    }
+
+                    break;
                     
                 default:
                     if (isMove)
@@ -320,23 +357,23 @@ namespace AppGui
                         //string to = getFromRecognized(dict, "PositionFinal");
                         //int pieceNumber = dict.ContainsKey("NumberInitial") ? int.Parse(dict["NumberInitial"]) : 1;
 
-                        string from = "LEFT";
+                        string from = getCurrentOrUpdate(null, "from", "LEFT");
                         string to = directionsDict[action[action.Length - 1].ToString()];
                         Console.WriteLine("To: " + to);
-                        int pieceNumber = 1;
+                        pieceNumber = 1;
 
                         if (entity == "PAWN") {
                             pieceNumber = 2;
                         }
                         
-                        var possiblePieces = getPossiblePieces(
+                        possiblePieces = getPossiblePieces(
                             pieceName: entity,
                             from: from,
                             number: pieceNumber
                         );
 
                         //int finalNumer = dict.ContainsKey("NumberFinal") ? int.Parse(dict["NumberFinal"]) : 1;
-                        int finalNumer = 1;
+                        finalNumer = 1;
                         //if (!ignoreConfidence) isConfident = generateConfidence(confidence, dict);
                         if (isConfident)
                         {
@@ -350,6 +387,7 @@ namespace AppGui
 
                     else if (isEntity) {
                         entity = pieceDict2[action];
+                        getCurrentOrUpdate("LEFT", "from", "");
                         Console.WriteLine("NEW ENTITY: " + entity);
                         getCurrentOrUpdate(entity, "entity", "");
                     }
@@ -471,7 +509,10 @@ namespace AppGui
 
                 if (possibleMoves.Count == 1)
                 {
-                    if (to.Length <= 2) context["from"] = to;
+                    var move = possibleMoves[0];
+                    var newTo = getPiecePosition(move);
+                    context["from"] = newTo;
+                    
                     performMove(possibleMoves[0]);
 
                 }
@@ -485,16 +526,19 @@ namespace AppGui
             else if (correctPieces.Count > 1)
             {
                 correctPieces[correctPieces.Count - 1].Click();
-                sendMessage(AMBIGUOS_PIECE);
+                //sendMessage(AMBIGUOS_PIECE);
+                Console.WriteLine("AMBIGUOS_PIECE");
             }
             else if (pieces.Count == 1)
             {
                 pieces[pieces.Count - 1].Click();
-                sendMessage(WRONG_MOVE_ERROR);
+                //sendMessage(WRONG_MOVE_ERROR);
+                Console.WriteLine("WRONG_MOVE_ERROR");
             }
             else
             {
-                sendMessage(NO_KNOWN_PIECE_ERROR);
+                //sendMessage(NO_KNOWN_PIECE_ERROR);
+                Console.WriteLine("NO_KNOWN_PIECE_ERROR");
             }
         }
 
@@ -654,7 +698,10 @@ namespace AppGui
             Console.WriteLine("button: " + button);
             Console.WriteLine("button class: " + button.GetAttribute("class"));
             button.Click();
-            sendMessage(GAME_ENDED);
+            //sendMessage(GAME_ENDED);
+            System.Threading.Thread.Sleep(WAIT_TIME * 2);
+            opponentType("COMPUTER", -1);
+            playAgainst(-1);
         }
 
 
