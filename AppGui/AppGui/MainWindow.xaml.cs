@@ -185,7 +185,7 @@ namespace AppGui
         private bool isCurrent;
         private IWebElement table;
         private long previousTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        private long COOLDOWN_TIME = 10000;
+        private long COOLDOWN_TIME = 3000;
 
         // ------------------------ DICTS
         public Dictionary<string, string> context = new Dictionary<string, string>();
@@ -323,6 +323,11 @@ namespace AppGui
                     //string finalPos = getFromRecognized(dict, "PositionFinal");
                     int pieceNumber = 1;
 
+                    Console.WriteLine("Initial pos: " + initialPos);
+                    //Console.WriteLine("Final pos: " + finalPos);
+                    Console.WriteLine("Piece number: " + pieceNumber);
+                    Console.WriteLine("Entity: " + entity);
+
                     var possiblePieces = getPossiblePiecesCapture(
                         pieceName: entity,
                         from: initialPos,
@@ -373,7 +378,7 @@ namespace AppGui
                         );
 
                         //int finalNumer = dict.ContainsKey("NumberFinal") ? int.Parse(dict["NumberFinal"]) : 1;
-                        finalNumer = 1;
+                        finalNumer = -1;
                         //if (!ignoreConfidence) isConfident = generateConfidence(confidence, dict);
                         if (isConfident)
                         {
@@ -511,7 +516,9 @@ namespace AppGui
                 {
                     var move = possibleMoves[0];
                     var newTo = getPiecePosition(move);
-                    context["from"] = newTo;
+                    Console.WriteLine("New to: " + newTo);
+                    Console.WriteLine("New to[0]: " + newTo[0]);
+                    context["from"] = getHorizontalLetter(newTo[0].ToString()).ToString() + newTo[1];
                     
                     performMove(possibleMoves[0]);
 
@@ -844,7 +851,12 @@ namespace AppGui
                 var possibleMoves = possibleMovesList[0];
                 if (possibleMoves.Count == 1)
                 {
-                    if (to.Length <= 2) context["from"] = to;
+                    var move = possibleMoves[0];
+                    var newTo = getPiecePosition(move);
+                    Console.WriteLine("New to: " + newTo);
+                    Console.WriteLine("New to[0]: " + newTo[0]);
+
+                    context["from"] = getHorizontalLetter(newTo[0].ToString()).ToString() + newTo[1]; ;
                     performMove(possibleMoves[0]);
 
                 }
@@ -1054,10 +1066,18 @@ namespace AppGui
              * If just one piece can move to this position, it will be automatic
              * @parameter direction: up, down, left, right, etc
              */
-
+            
+            //CAPTURING
+            //Initial pos: 13
+            //Piece number: 1
+            //Entity: BISHOP
+            //From suspeito: 13
+            //Possible moves: 1
+            
             Console.WriteLine("From suspeito: " + from);
 
             from = getCurrentOrUpdate(from, "from");
+            Console.WriteLine("Novo From suspeito: " + from);
             pieceName = getCurrentOrUpdate(pieceName ,"pieceName");
 
             // i have no idea what the piece can be
@@ -1080,7 +1100,20 @@ namespace AppGui
                 piece = " square-" + getHorizontalNumber(from[0]) + from[1];
             }
 
+            //Entity: BISHOP
+            //From suspeito: 13
+            //Piece class: square--153
+            //Possible pieces sussy: 0
+
+            //Novo From suspeito: 13
+            //letter horizontal: 1
+            //Piece class: square--153
+            //Possible pieces sussy: 0
+            //Correct pieces: 0
+
+
             var possiblePieces = FindChildrenByClass(board, piece);
+
 
             if (possiblePieces.Count <= 1)
             {
@@ -1311,7 +1344,14 @@ namespace AppGui
 
         public int getHorizontalNumber(char letter)
         {
+            Console.WriteLine("letter horizontal: " + letter);
             return (int)letter - 64;
+        }
+
+        public char getHorizontalLetter(string number)
+        {
+            Console.WriteLine("number horizontal: " + number);
+            return (char)(Int32.Parse(number) + 64);
         }
 
         public string getPiecePosition(IWebElement piece)
