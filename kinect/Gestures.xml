@@ -2,8 +2,8 @@
 <Gestures>
   <Gesture>
     <ID>0</ID>
-    <NAME>bishop</NAME>
-    <SEMANTIC>bishop</SEMANTIC>
+    <NAME>BIshop</NAME>
+    <SEMANTIC>BI</SEMANTIC>
   </Gesture>
   <Gesture>
     <ID>1</ID>

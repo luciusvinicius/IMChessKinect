@@ -185,7 +185,7 @@ namespace AppGui
         private bool isCurrent;
         private IWebElement table;
         private long previousTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        private long COOLDOWN_TIME = 3000;
+        private long COOLDOWN_TIME = 1000;
 
         // ------------------------ DICTS
         public Dictionary<string, string> context = new Dictionary<string, string>();
@@ -197,13 +197,13 @@ namespace AppGui
         {
             ["R"] = "RIGHT",
             ["L"] = "LEFT",
-            ["A"] = "FRONT",
-            ["B"] = "BACK",
+            ["B"] = "FRONT",
+            ["A"] = "BACK",
         };
 
         Dictionary<string, string> pieceDict2 = new Dictionary<string, string>()
         {
-            ["bishop"] = "BISHOP",
+            ["BI"] = "BISHOP",
             ["Knight"] = "KNIGHT",
             ["Pawn"] = "PAWN",
         };
@@ -279,9 +279,10 @@ namespace AppGui
             previousTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
             
 
-            float confidence = float.Parse(list[2], CultureInfo.InvariantCulture);
+            float confidence = float.Parse(list[2], CultureInfo.InvariantCulture) / 1000000000000000;
 
             Console.WriteLine("Confidence: " + confidence);
+            Console.WriteLine("Sussy confidence: " + (confidence < 0.7));
 
             //string entity = getFromRecognized(dict, "Entity");
             //string action = getFromRecognized(dict, "Action", "");
@@ -305,7 +306,7 @@ namespace AppGui
                     break;
 
                 case "Quit":
-                    giveUp();
+                    if (confidence > 0.52) giveUp();
                     break;
                     
                 case "Capture":
@@ -392,9 +393,21 @@ namespace AppGui
 
                     else if (isEntity) {
                         entity = pieceDict2[action];
-                        getCurrentOrUpdate("LEFT", "from", "");
-                        Console.WriteLine("NEW ENTITY: " + entity);
-                        getCurrentOrUpdate(entity, "entity", "");
+                        if (entity == "PAWN")
+                        {
+                            if (confidence > 0.5)
+                            {
+                                getCurrentOrUpdate("LEFT", "from", "");
+                                Console.WriteLine("NEW ENTITY: " + entity);
+                                getCurrentOrUpdate(entity, "entity", "");
+                            }
+                        }
+                        else {
+                            getCurrentOrUpdate("LEFT", "from", "");
+                            Console.WriteLine("NEW ENTITY: " + entity);
+                            getCurrentOrUpdate(entity, "entity", "");
+                        }
+                        
                     }
 
                     break;
@@ -701,14 +714,22 @@ namespace AppGui
         public void giveUp()
         {
             Console.WriteLine("Give Up sussy");
-            IWebElement button = driver.FindElement(By.XPath(GIVE_UP_BUTTON));
-            Console.WriteLine("button: " + button);
-            Console.WriteLine("button class: " + button.GetAttribute("class"));
-            button.Click();
-            //sendMessage(GAME_ENDED);
-            System.Threading.Thread.Sleep(WAIT_TIME * 2);
-            opponentType("COMPUTER", -1);
-            playAgainst(-1);
+            try
+            {
+                IWebElement button = driver.FindElement(By.XPath(GIVE_UP_BUTTON));
+                Console.WriteLine("button: " + button);
+                Console.WriteLine("button class: " + button.GetAttribute("class"));
+                button.Click();
+                //sendMessage(GAME_ENDED);
+                System.Threading.Thread.Sleep(WAIT_TIME * 2);
+                opponentType("COMPUTER", -1);
+                playAgainst(-1);
+            }
+            catch (NoSuchElementException e) {
+                opponentType("COMPUTER", -1);
+                playAgainst(-1);
+            }
+            
         }
 
 
